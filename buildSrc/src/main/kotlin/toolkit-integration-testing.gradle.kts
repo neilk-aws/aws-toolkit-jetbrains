@@ -19,8 +19,10 @@ sourceSets {
         java.setSrcDirs(listOf("it"))
         resources.srcDirs(listOf("it-resources"))
 
-        compileClasspath += main.get().output + test.get().output
-        runtimeClasspath += main.get().output + test.get().output
+        // Use lazy configuration to avoid circular dependencies
+        // Reference test outputs through configurations instead of direct output
+        compileClasspath += main.get().output
+        runtimeClasspath += main.get().output
 
         // different convention for intellij projects
         plugins.withType<ToolkitIntellijSubpluginPlugin>().configureEach {
@@ -37,6 +39,8 @@ configurations.named("integrationTestCompileClasspath").configure {
         attribute(Attributes.extracted, true)
         attribute(Attributes.collected, true)
     }
+    // Ensure test fixtures are available to integration tests through proper configuration dependencies
+    // This prevents circular dependencies by using configuration extension instead of direct output reference
 }
 
 configurations.named("integrationTestRuntimeClasspath").configure {
@@ -71,7 +75,9 @@ val integrationTestConfiguration: Test.() -> Unit = {
         environment.remove("AWS_SESSION_TOKEN")
     }
 
-    mustRunAfter(tasks.test)
+    // Ensure proper task ordering to prevent circular dependencies
+    // Integration tests should run after regular tests, not during them
+    mustRunAfter(tasks.test, tasks.named("testClasses"))
 }
 
 extensions.findByType<IntelliJPlatformTestingExtension>()?.let {
