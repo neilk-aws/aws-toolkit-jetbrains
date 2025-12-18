@@ -73,6 +73,11 @@ tasks.processResources {
 tasks.processTestResources {
     // TODO how can we remove this
     duplicatesStrategy = DuplicatesStrategy.WARN
+    
+    // Ensure processTestResources doesn't create circular dependencies
+    // processTestResources should NOT depend on testClasses or compileTestKotlin
+    // to avoid: testClasses -> compileTestKotlin -> processTestResources -> testClasses cycle
+    mustRunAfter(tasks.processResources)
 }
 
 // Run after the project has been evaluated so that the extension (intellijToolkit) has been configured
