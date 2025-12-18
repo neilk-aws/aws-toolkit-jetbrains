@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import org.jetbrains.gradle.ext.ProjectSettings
 import org.jetbrains.gradle.ext.TaskTriggersConfig
+import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import software.aws.toolkits.gradle.changelog.tasks.GenerateGithubChangeLog
 
 plugins {
@@ -10,6 +11,7 @@ plugins {
     id("toolkit-git-secrets")
     id("toolkit-jacoco-report")
     id("org.jetbrains.gradle.plugin.idea-ext")
+    id("org.jetbrains.intellij.platform")
 }
 
 allprojects {
@@ -31,6 +33,11 @@ tasks.createRelease.configure {
 }
 
 dependencies {
+    // IntelliJ Platform dependency required for Qodana analysis
+    intellijPlatform {
+        intellijIdeaCommunity("2024.3")
+    }
+
     aggregateCoverage(project(":plugin-toolkit:intellij-standalone"))
     aggregateCoverage(project(":plugin-core"))
     aggregateCoverage(project(":plugin-amazonq"))
@@ -42,7 +49,8 @@ dependencies {
     aggregateCoverage(project(":ui-tests"))
 }
 
-tasks.register("runIde") {
+// Override the default runIde task to provide helpful error message
+tasks.named("runIde") {
     doFirst {
         throw GradleException("Use project specific runIde command, i.e. :plugin-toolkit:intellij-standalone:runIde")
     }
