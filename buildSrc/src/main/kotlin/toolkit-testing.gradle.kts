@@ -104,17 +104,30 @@ tasks.jacocoTestReport.configure {
 
 // Share the coverage data to be aggregated for the whole product
 // this can be removed once we're using jvm-test-suites properly
-configurations.register("coverageDataElements") {
+val coverageDataElements = configurations.register("coverageDataElements") {
     isVisible = false
     isCanBeResolved = false
     isCanBeConsumed = true
-    extendsFrom(configurations.implementation.get())
+    // Removed extendsFrom(configurations.implementation.get()) to prevent circular dependencies
+    // with Kotlin test dependency management during configuration phase. The Kotlin plugin's
+    // maybeAddTestDependencyCapability tries to access all non-project dependencies which
+    // triggers early initialization of configurations, creating a circular reference.
+    // This configuration only needs to expose the JaCoCo execution data files and doesn't
+    // need to inherit implementation dependencies.
     attributes {
         attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
         attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.DOCUMENTATION))
         attribute(DocsType.DOCS_TYPE_ATTRIBUTE, objects.named("jacoco-coverage-data"))
     }
-    tasks.withType<Test>().configureEach {
-        outgoing.artifact(extensions.getByType<JacocoTaskExtension>().destinationFile!!)
+}
+
+// Configure test tasks to publish their coverage data to the coverageDataElements configuration
+// This must be done outside the configuration registration to avoid early property access
+// which triggers the "AbstractProperty.beforeRead" error during Kotlin dependency resolution
+tasks.withType<Test>().configureEach {
+    val jacocoExtension = extensions.getByType<JacocoTaskExtension>()
+    coverageDataElements.configure {
+        // Use a provider to defer the property access until task execution
+        outgoing.artifact(provider { jacocoExtension.destinationFile!! })
     }
 }
