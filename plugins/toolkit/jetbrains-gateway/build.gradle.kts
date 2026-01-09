@@ -3,6 +3,7 @@
 @file:OptIn(kotlin.io.encoding.ExperimentalEncodingApi::class)
 
 import net.bytebuddy.utility.RandomString
+import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import org.jetbrains.intellij.platform.gradle.tasks.PrepareSandboxTask
 import org.jetbrains.kotlin.gradle.internal.ensureParentDirsCreated
@@ -66,6 +67,8 @@ listOf(
 
 dependencies {
     intellijPlatform {
+        create(IntelliJPlatformType.Gateway, toolkitIntelliJ.version(), useInstaller = false)
+        
         pluginVerifier()
 
         testFramework(TestFrameworkType.Bundled)
