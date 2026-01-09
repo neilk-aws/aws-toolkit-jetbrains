@@ -104,7 +104,7 @@ tasks.jacocoTestReport.configure {
 
 // Share the coverage data to be aggregated for the whole product
 // this can be removed once we're using jvm-test-suites properly
-configurations.register("coverageDataElements") {
+val coverageDataElements = configurations.register("coverageDataElements") {
     isVisible = false
     isCanBeResolved = false
     isCanBeConsumed = true
@@ -119,7 +119,15 @@ configurations.register("coverageDataElements") {
         attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.DOCUMENTATION))
         attribute(DocsType.DOCS_TYPE_ATTRIBUTE, objects.named("jacoco-coverage-data"))
     }
-    tasks.withType<Test>().configureEach {
-        outgoing.artifact(extensions.getByType<JacocoTaskExtension>().destinationFile!!)
+}
+
+// Configure test tasks to publish their coverage data to the coverageDataElements configuration
+// This must be done outside the configuration registration to avoid early property access
+// which triggers the "AbstractProperty.beforeRead" error during Kotlin dependency resolution
+tasks.withType<Test>().configureEach {
+    val jacocoExtension = extensions.getByType<JacocoTaskExtension>()
+    coverageDataElements.configure {
+        // Use a provider to defer the property access until task execution
+        outgoing.artifact(provider { jacocoExtension.destinationFile!! })
     }
 }
