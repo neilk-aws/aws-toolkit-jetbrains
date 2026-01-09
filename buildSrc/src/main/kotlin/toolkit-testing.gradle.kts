@@ -108,7 +108,12 @@ configurations.register("coverageDataElements") {
     isVisible = false
     isCanBeResolved = false
     isCanBeConsumed = true
-    extendsFrom(configurations.implementation.get())
+    // Removed extendsFrom(configurations.implementation.get()) to prevent circular dependencies
+    // with Kotlin test dependency management during configuration phase. The Kotlin plugin's
+    // maybeAddTestDependencyCapability tries to access all non-project dependencies which
+    // triggers early initialization of configurations, creating a circular reference.
+    // This configuration only needs to expose the JaCoCo execution data files and doesn't
+    // need to inherit implementation dependencies.
     attributes {
         attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
         attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.DOCUMENTATION))
