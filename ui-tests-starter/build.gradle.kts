@@ -83,6 +83,7 @@ val prepareAmazonQTest by intellijPlatformTesting.testIde.registering {
 }
 
 tasks.register<Test>("uiTest") {
+    // Explicitly configure test task to avoid deprecation warnings in Gradle 9.0
     testClassesDirs = uiTestSource.output.classesDirs
     classpath = uiTestSource.runtimeClasspath
 

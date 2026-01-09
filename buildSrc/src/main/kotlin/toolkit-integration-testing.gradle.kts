@@ -62,8 +62,9 @@ idea {
 val integrationTestConfiguration: Test.() -> Unit = {
     group = LifecycleBasePlugin.VERIFICATION_GROUP
     description = "Runs the integration tests."
+    // Explicitly configure test task to avoid deprecation warnings in Gradle 9.0
     testClassesDirs = integrationTests.output.classesDirs
-    classpath += integrationTests.runtimeClasspath
+    classpath = integrationTests.runtimeClasspath
 
     ciOnly {
         environment.remove("AWS_ACCESS_KEY_ID")
